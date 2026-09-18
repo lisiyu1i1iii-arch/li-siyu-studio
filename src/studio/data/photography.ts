@@ -36,7 +36,7 @@ export interface PhotoWork {
   title: string;
   /** 简短说明 */
   caption: string;
-  /** 真实图片地址（Gallery 全尺寸） */
+  /** Gallery 展示用地址（网页优化版；原始作品仍保留在 photography/ 目录） */
   image: string | null;
   /** 3D 相框使用的缩略图（性能） */
   thumb: string | null;
@@ -84,7 +84,8 @@ function work(n: number, frame: PhotoFrameDef): PhotoWork {
     id,
     title: `摄影作品 ${nn}`,
     caption: "摄影作品",
-    image: `/assets/portfolio/photography/photo-${nn}.jpg`,
+    // Gallery 使用网页优化版（长边 ≤1600、q82），避免加载 3–7MB 的 12MP 原图
+    image: `/assets/portfolio/photography/gallery/photo-${nn}.jpg`,
     thumb: `/assets/portfolio/photography/thumbs/photo-${nn}.jpg`,
     aspect: PHOTO_ASPECTS[n - 1] ?? 1,
     placeholder: false,

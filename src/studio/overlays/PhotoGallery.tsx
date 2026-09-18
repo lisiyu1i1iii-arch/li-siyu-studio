@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 
@@ -28,6 +28,19 @@ const GALLERY_CARD = {
 const GALLERY_TRANSITION = { duration: 0.28, ease: "easeOut" } as const;
 
 /**
+ * 模块级图片预加载缓存：同一 URL 只创建一次 Image，
+ * 切换上一张/下一张时直接命中浏览器缓存，避免重复请求与解码压力。
+ */
+const preloadCache = new Map<string, HTMLImageElement>();
+function preloadImage(src: string | null) {
+  if (typeof window === "undefined" || !src || preloadCache.has(src)) return;
+  const img = new Image();
+  img.decoding = "async";
+  img.src = src;
+  preloadCache.set(src, img);
+}
+
+/**
  * 摄影 Gallery（works-gallery Skill）
  *
  * · 由 13 个相框各自的 ID 打开，直接定位到对应索引（photo-07 → 07）
@@ -44,6 +57,8 @@ export default function PhotoGallery() {
   const setGalleryIndex = useStudioStore((s) => s.setGalleryIndex);
 
   const touchX = useRef<number | null>(null);
+  /** 已加载完成的图片 src：切换时立即失效，避免白块 */
+  const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
 
   const go = useCallback(
     (delta: number) => {
@@ -72,8 +87,19 @@ export default function PhotoGallery() {
     return () => window.removeEventListener("keydown", onKey);
   }, [galleryIndex, go, closePhotoGallery]);
 
+  // 预加载当前 / 下一张 / 上一张：切换时命中缓存，不再临时下载 3–7MB 大图
+  useEffect(() => {
+    if (galleryIndex === null) return;
+    const n = PHOTO_COUNT;
+    [galleryIndex, (galleryIndex + 1) % n, (galleryIndex - 1 + n) % n].forEach(
+      (i) => preloadImage(PHOTOGRAPHY[i].image),
+    );
+  }, [galleryIndex]);
+
   const open = galleryIndex !== null;
   const current = open ? PHOTOGRAPHY[galleryIndex] : null;
+  /** 当前图是否已加载完成（用 src 比对，切换瞬间即为 false） */
+  const isLoaded = Boolean(current?.image) && loadedSrc === current?.image;
   const counter = open
     ? `${String(galleryIndex + 1).padStart(2, "0")} / ${String(PHOTO_COUNT).padStart(2, "0")}`
     : "";
@@ -119,12 +145,29 @@ export default function PhotoGallery() {
                 go(dx < 0 ? 1 : -1);
               }}
             >
+              {/* 低清缩略图作为占位（已随 3D 相框加载，命中缓存），
+                  大图加载完成后淡入，切换时不出现白块 */}
+              {current.thumb && !isLoaded && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={current.thumb}
+                  alt=""
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 m-auto max-h-[62vh] w-auto max-w-full rounded-sm object-contain opacity-70 blur-md"
+                />
+              )}
               {current.image ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
+                  key={current.id}
                   src={current.image}
                   alt={current.title}
-                  className="max-h-[62vh] w-auto max-w-full rounded-sm object-contain shadow-sm"
+                  decoding="async"
+                  onLoad={() => setLoadedSrc(current.image)}
+                  onError={() => setLoadedSrc(current.image)}
+                  className={`max-h-[62vh] w-auto max-w-full rounded-sm object-contain shadow-sm transition-opacity duration-300 ${
+                    isLoaded ? "opacity-100" : "opacity-0"
+                  }`}
                 />
               ) : (
                 <CoverPlaceholder

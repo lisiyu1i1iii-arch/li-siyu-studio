@@ -174,8 +174,19 @@ export function startBgm() {
   if (!el) return;
   // 幂等：已在播放则不重复 play()
   if (!el.paused) return;
-  const p = el.play();
-  if (p && typeof p.catch === "function") p.catch(() => {});
+
+  const play = () => {
+    const p = el.play();
+    if (p && typeof p.catch === "function") p.catch(() => {});
+  };
+
+  // 立即尝试播放（浏览器会自动等待可播数据）；
+  // 若缓冲不足（readyState < HAVE_FUTURE_DATA），在 canplay 时再补一次，
+  // 尽量避免“边下边播”造成的断续 / 电流感。
+  play();
+  if (el.readyState < 3) {
+    el.addEventListener("canplay", play, { once: true });
+  }
 }
 
 export function stopBgm() {
