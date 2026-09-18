@@ -34,11 +34,17 @@ export default function StudioExperience() {
   /** Canvas / WebGLRenderer 是否已完成可显示初始化 */
   const [sceneReady, setSceneReady] = useState(false);
 
-  // Entry 遮罩解除条件：WebGL 不可用时立即可进入；需要 WebGL 时必须等 Canvas 就绪
-  const ready = Boolean(profile) && (!profile?.webgl || sceneReady);
+  // Entry 入口就绪条件：仅要求设备档案（profile）已就绪即可进入。
+  // 不再依赖 sceneReady —— 移动端 3D 初始化失败/较慢时，入口门也始终可点击，
+  // 进入后由 StudioErrorBoundary / FallbackBackdrop 兜底，避免永久卡在 Loading。
+  // sceneReady 仍保留，仅表示 3D 场景自身状态。
+  const ready = Boolean(profile);
 
   return (
-    <main className="relative h-[100dvh] w-full overflow-hidden bg-studio-paper text-studio-ink">
+    <main
+      data-scene-ready={sceneReady ? "true" : "false"}
+      className="relative h-[100dvh] w-full overflow-hidden bg-studio-paper text-studio-ink"
+    >
       {/*
        * Canvas 常驻：profile 就绪即挂载，与 entered 无关。
        * Entry 阶段 Canvas 已在 LoadingScreen 遮罩下完成 WebGL 初始化，

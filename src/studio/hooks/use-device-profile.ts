@@ -7,11 +7,14 @@ import type { DeviceProfile } from "../types";
 function detectWebGL(): boolean {
   try {
     const canvas = document.createElement("canvas");
-    const gl =
-      canvas.getContext("webgl2") ??
+    const gl = (canvas.getContext("webgl2") ??
       canvas.getContext("webgl") ??
-      canvas.getContext("experimental-webgl");
-    return Boolean(gl);
+      canvas.getContext("experimental-webgl")) as WebGLRenderingContext | null;
+    const supported = Boolean(gl);
+    // 探测完成后立即释放这个临时上下文，避免占用移动端有限的 WebGL 上下文名额，
+    // 从而不影响 R3F Canvas 的正式上下文创建。
+    gl?.getExtension("WEBGL_lose_context")?.loseContext();
+    return supported;
   } catch {
     return false;
   }
