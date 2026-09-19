@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactElement } from "react";
 import { motion } from "framer-motion";
 import { ArrowRight, FileText, X } from "lucide-react";
 
@@ -17,7 +18,7 @@ import { Label, PaperGrain } from "./editorial";
 
 // 注意：collection 不在 SECTIONS 中，因此不会出现在 QuickView 的板块列表里；
 // 这里补全 Record 类型所需条目。
-const BODIES: Record<SectionKey, () => JSX.Element> = {
+const BODIES: Record<SectionKey, () => ReactElement> = {
   about: AboutBody,
   projects: ProjectsBody,
   experience: ExperienceBody,

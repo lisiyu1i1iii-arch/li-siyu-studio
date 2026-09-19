@@ -8,9 +8,9 @@ import {
 } from "./env";
 
 /** 服务端（RSC / Route Handler）Supabase 客户端。未配置时返回 null。 */
-export function getSupabaseServerClient() {
+export async function getSupabaseServerClient() {
   if (!isSupabaseConfigured) return null;
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
 
   return createServerClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     cookies: {

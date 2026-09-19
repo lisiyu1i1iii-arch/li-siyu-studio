@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, type ReactElement } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 
@@ -18,7 +18,7 @@ import SkillCategoryBody from "./bodies/SkillCategoryBody";
 import SkillsBody from "./bodies/SkillsBody";
 import WorksBody from "./bodies/WorksBody";
 
-const BODIES: Record<SectionKey, () => JSX.Element> = {
+const BODIES: Record<SectionKey, () => ReactElement> = {
   about: AboutBody,
   projects: ProjectsBody,
   experience: ExperienceBody,

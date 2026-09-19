@@ -37,7 +37,7 @@ function LevelDots({ level }: { level: number }) {
 }
 
 export default async function CvPage() {
-  const client = getSupabaseServerClient();
+  const client = await getSupabaseServerClient();
   const { data } = await loadPortfolioData(client);
 
   const hero = findSection(data, "hero");
