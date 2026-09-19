@@ -132,3 +132,5 @@ npm run build      # 生产构建
 npm run start      # 启动生产构建
 npm run seed       # 写入初始数据（需 Supabase）
 ```
+
+<!-- deploy trigger: cloudflare build -->
